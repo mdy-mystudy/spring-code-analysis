@@ -127,33 +127,49 @@ class ConstructorResolver {
 	public BeanWrapper autowireConstructor(String beanName, RootBeanDefinition mbd,
 			@Nullable Constructor<?>[] chosenCtors, @Nullable Object[] explicitArgs) {
 
+		//定义bean包装类
 		BeanWrapperImpl bw = new BeanWrapperImpl();
 		this.beanFactory.initBeanWrapper(bw);
 
+		//最终用于实例化的构造函数
 		Constructor<?> constructorToUse = null;
+		//最终用于实例化的参数Holder
 		ArgumentsHolder argsHolderToUse = null;
+		//最终用于实例化的构造函数参数
 		Object[] argsToUse = null;
-
+		//解析出要用于实例化的构造函数参数
 		if (explicitArgs != null) {
+			//如果explicitArgs不为空，则构造函数的参数直接使用explicitArgs
+			//通过getBean方法调用时，显示指定了参数，则explicitArgs就不为null
 			argsToUse = explicitArgs;
 		}
 		else {
+			//尝试从缓存中获取已经解析过的构造函数参数
 			Object[] argsToResolve = null;
+			//加锁后操作
 			synchronized (mbd.constructorArgumentLock) {
+				//拿到缓存中已解析的构造函数或工厂方法
 				constructorToUse = (Constructor<?>) mbd.resolvedConstructorOrFactoryMethod;
+				//如果constructorToUse不为空 && mbd标记了构造函数h参数已解析
 				if (constructorToUse != null && mbd.constructorArgumentsResolved) {
 					// Found a cached constructor...
+					//从缓存中获取已解析的构造函数参数
 					argsToUse = mbd.resolvedConstructorArguments;
 					if (argsToUse == null) {
+						//如果resolvedConstructorArguments为空，则从缓存中获取准备用于解析的构造函数参数，
+						//constructorArgumentsResolved为true时，resolvedConstructorArguments和
+						//preparedConstructorArguments必然有一个缓存了构造函数的参数
 						argsToResolve = mbd.preparedConstructorArguments;
 					}
 				}
 			}
+			//如果argsToResolve不为空，则对构造函数参数进行解析
 			if (argsToResolve != null) {
+				//如给定方法的构造函数 A（int，int）通过这个方法后会将A（“1”，“1”）转化为 A（1，1）
 				argsToUse = resolvePreparedArguments(beanName, mbd, bw, constructorToUse, argsToResolve);
 			}
 		}
-
+		//如果构造函数没有被缓存，则从配置文件中获取
 		if (constructorToUse == null || argsToUse == null) {
 			// Take specified constructors, if any.
 			Constructor<?>[] candidates = chosenCtors;
