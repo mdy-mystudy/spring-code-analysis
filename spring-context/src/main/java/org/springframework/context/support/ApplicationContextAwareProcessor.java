@@ -92,6 +92,7 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 			acc = this.applicationContext.getBeanFactory().getAccessControlContext();
 		}
 
+
 		if (acc != null) {
 			AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
 				invokeAwareInterfaces(bean);
@@ -99,6 +100,7 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 			}, acc);
 		}
 		else {
+			//调用Aware接口
 			invokeAwareInterfaces(bean);
 		}
 
@@ -106,6 +108,7 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 	}
 
 	private void invokeAwareInterfaces(Object bean) {
+
 		if (bean instanceof EnvironmentAware) {
 			((EnvironmentAware) bean).setEnvironment(this.applicationContext.getEnvironment());
 		}
@@ -124,6 +127,9 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 		if (bean instanceof ApplicationStartupAware) {
 			((ApplicationStartupAware) bean).setApplicationStartup(this.applicationContext.getApplicationStartup());
 		}
+		// ApplicationContextAware：实现此接口的类想要拿到ApplicationContext，因此我们在这边赋值给它
+		//我们经常通过实现 ApplicationContextAware 接口来拿到 ApplicationContext，我们之所以能拿到 ApplicationContext，
+		//就是在这边被赋值的。
 		if (bean instanceof ApplicationContextAware) {
 			((ApplicationContextAware) bean).setApplicationContext(this.applicationContext);
 		}
